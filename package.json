@@ -1,0 +1,15 @@
+{
+  "name": "tusharepro",
+  "version": "1.0.0",
+  "description": "tushare pro sdk",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "tushare",
+    "stock"
+  ],
+  "author": "zuweie",
+  "license": "MIT"
+}
