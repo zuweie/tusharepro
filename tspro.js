@@ -576,12 +576,12 @@ TusharePro.prototype.hsgt_top10 = function (ts_code='', trade_date='', start_dat
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.ggt_top10 = function (ts_code='', trade_code='', start_date='', end_date='', market_type='', fields='') {
+TusharePro.prototype.ggt_top10 = function (ts_code='', trade_date='', start_date='', end_date='', market_type='', fields='') {
     return pro_api ( 'ggt_top10',
         this.token,
         {
             ts_code: ts_code,
-            trade_code: trade_code,
+            trade_date: trade_date,
             start_date: start_date,
             end_date: end_date,
             market_type
@@ -895,6 +895,59 @@ TusharePro.prototype.index_weekly = function (ts_code='', trade_date='', start_d
     );
 };
 
+/**
+ * @description: 获取指数月线行情,每月更新一次/单次最大1000行记录,可多次获取,总量不限制/用户需要至少600积分才可以调取，积分越多频次越高，具体请参阅积分获取办法
+ * @param {type} 
+ * @return: 
+ */
+TusharePro.prototype.index_monthly = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
+    return pro_api ('index_monthly',
+        this.token,
+        {
+            ts_code: ts_code,
+            trade_date: trade_date,
+            start_date: start_date,
+            end_date,
+        },
+        fields
+    );
+};
+
+/**
+ * @description: 获取各类指数成分和权重，月度数据 ，如需日度指数成分和权重，请联系 waditu@163.com/指数公司网站公开数据/用户需要至少400积分才可以调取，具体请参阅积分获取办法
+ * @param {type} 
+ * @return: 
+ */
+TusharePro.prototype.index_weight = function (index_code, trade_date, start_date='', end_date='', fields='') {
+    return pro_api ('index_weight',
+        this.token,
+        {
+            index_code: index_code,
+            trade_date: trade_date,
+            start_date: start_date,
+            end_date: end_date
+        },
+        fields
+    );
+};
+
+/**
+ * @description: 目前只提供上证综指，深证成指，上证50，中证500，中小板指，创业板指的每日指标数据/Tushare社区统计计算/从2004年1月开始提供/用户需要至少400积分才可以调取，具体请参阅积分获取办法
+ * @param {type} 
+ * @return: 
+ */
+TusharePro.prototype.index_dailybasic = function (trade_date='', ts_code='', start_date='', end_date='', fields='') {
+    return pro_api ('index_dailybasic',
+        this.token,
+        {
+            trade_date: trade_date,
+            ts_code: ts_code,
+            start_date: start_date,
+            end_date: end_date,
+        }, 
+        fields
+    );
+};
 
 module.exports = TusharePro;
 
