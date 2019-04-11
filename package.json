@@ -10,11 +10,15 @@
     "tushare",
     "stock"
   ],
+  "devDependencies": {
+    "chai": "*"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/zuweie/tusharepro.git"
   },
   "author": "zuweie <51930595@qq.com> (http://www.bankoo.co)",
   "homepage": "https://github.com/zuweie/tusharepro",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {}
 }

@@ -2,7 +2,7 @@
 
 const http = require('http');
 
-function pro_api (api_name, token, params, fields='') {
+function pro_api (api_name, token, params, fields='', formatfunc=reformat_data) {
 
     return new Promise ( (reslove, reject ) => {
         
@@ -39,8 +39,8 @@ function pro_api (api_name, token, params, fields='') {
             res.on('data', chunk => {
                 data += chunk;
             }).on('end', () => {
-                //console.log(data);
-                let stock_data = reformat_data(data);
+                  
+                let stock_data = formatfunc?  formatfunc(data) : JSON.parse(data);
                 if (stock_data.code === 0) {
                     reslove (stock_data);
                 }else{
@@ -145,7 +145,7 @@ TusharePro.prototype.trade_cal = function (exchange='', start_date='', end_date=
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.hs_const = function (hs_type='', is_new='', fields='') {
+TusharePro.prototype.hs_const = function (hs_type, is_new='', fields='') {
     return pro_api ('hs_const',
         this.token,
         {
@@ -178,7 +178,7 @@ TusharePro.prototype.name_change = function (ts_code='', start_date='', end_date
   * @return: 
   */
 TusharePro.prototype.stock_company = function (exchange='', fields='') {
-    return pro_api('exchange',
+    return pro_api('stock_company',
         this.token,
         {
             exchange: exchange,
@@ -208,7 +208,7 @@ TusharePro.prototype.new_share = function (start_date='', end_date='', fields=''
   * @param {type} 
   * @return: 
   */
-TusharePro.prototype.daily = function (ts_code='', start_date='', end_date='', trade_date='', symbol='', fields='') {
+TusharePro.prototype.daily = function (ts_code='',trade_date='', start_date='', end_date='', symbol='', fields='') {
     return pro_api('daily',
         this.token,
         {
