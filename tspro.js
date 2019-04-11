@@ -266,13 +266,18 @@ TusharePro.prototype.monthly = function (ts_code='', trade_date='', start_date='
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.pro_bar = function () {
+TusharePro.prototype.pro_bar = function (fields='') {
+
+    
     return new Promise ((reslove, reject) => {
+        
         reject({
             code: 'NOSUPPORT',
             errmsg: '复权行情通过通用行情接口实现，利用Tushare Pro提供的复权因子进行计算，目前暂时只在SDK中提供支持，http方式无法调取。详情：https://tushare.pro/document/2?doc_id=146'
         });
+        
     });
+    
 };
 
 /**
@@ -280,7 +285,7 @@ TusharePro.prototype.pro_bar = function () {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.suspend = function (ts_code='', suspend_date='', resume_date='') {
+TusharePro.prototype.suspend = function (ts_code='', suspend_date='', resume_date='',fields='') {
     return pro_api ('suspend',
         this.token,
         {
@@ -315,7 +320,7 @@ TusharePro.prototype.daily_basic = function (ts_code='', trade_date='', start_da
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.adj_factor = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
+TusharePro.prototype.adj_factor = function (ts_code, trade_date='', start_date='', end_date='', fields='') {
     return pro_api ('adj_factor',
         this.token,
         {
@@ -335,6 +340,7 @@ TusharePro.prototype.adj_factor = function (ts_code='', trade_date='', start_dat
  */
 TusharePro.prototype.moneyflow = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
     return pro_api ('moneyflow',
+        this.token,
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -350,8 +356,9 @@ TusharePro.prototype.moneyflow = function (ts_code='', trade_date='', start_date
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.income = function (ts_code, ann_date='', end_date='', period='', report_type='', comp_type='', fields=''){
+TusharePro.prototype.income = function (ts_code, ann_date='', start_date='', end_date='', period='', report_type='', comp_type='', fields=''){
     return pro_api ('income',
+        this.token,
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -372,6 +379,7 @@ TusharePro.prototype.income = function (ts_code, ann_date='', end_date='', perio
  */
 TusharePro.prototype.balancesheet = function (ts_code, ann_date='', start_date='', end_date='', period='', report_type='', comp_type='', fields=''){
     return pro_api ('balancesheet',
+        this.token,
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -392,6 +400,7 @@ TusharePro.prototype.balancesheet = function (ts_code, ann_date='', start_date='
  */
 TusharePro.prototype.cashflow = function (ts_code, ann_date='', start_date='', end_date='', period='', report_type='', comp_type='', fields=''){
     return pro_api ('cashflow',
+        this.token,
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -412,6 +421,7 @@ TusharePro.prototype.cashflow = function (ts_code, ann_date='', start_date='', e
  */
 TusharePro.prototype.forecast = function (ts_code='', ann_date='', start_date='', end_date='', period='', type='', fields=''){
     return pro_api ('forecast',
+        this.token,
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -431,14 +441,16 @@ TusharePro.prototype.forecast = function (ts_code='', ann_date='', start_date=''
  */
 TusharePro.prototype.express = function (ts_code, ann_date='', start_date='', end_date='', period='', fields='') {
     return pro_api ('express', 
-    {
-        ts_code: ts_code,
-        ann_date: ann_date,
-        start_date: start_date,
-        end_date: end_date,
-        period: period
-    },
-    fields)
+        this.token,
+        {
+            ts_code: ts_code,
+            ann_date: ann_date,
+            start_date: start_date,
+            end_date: end_date,
+            period: period
+        },
+        fields
+    );
 };
 
 /**
@@ -698,7 +710,7 @@ TusharePro.prototype.top_inst = function (trade_date, ts_code='', fields='') {
  * @return: 
  */
 TusharePro.prototype.pledge_stat = function (ts_code, fields='') {
-    return pro_ai ( 'pledge_stat', 
+    return pro_api ( 'pledge_stat', 
         this.token,
         {
             ts_code: ts_code
