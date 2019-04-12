@@ -1,6 +1,6 @@
 # Tushare Pro JS
 ### 项目介绍
-* tushare Pro 是啥？自行百度，不啰嗦了！
+* [Tushare Pro](https://tushare.pro/document/2) 是啥？自行百度，不啰嗦了！
 * 此项目是对Tushare Pro 的 Http 接口的封装，使用的Javascript。
 
 ### 安装
