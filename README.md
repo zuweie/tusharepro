@@ -12,7 +12,7 @@ const Tushare = require('tusharepro');
 var ts = new Tushare('you-tusharepro-token');
 
 /* 在获得数据后，可以设置数据加工函数，方便把数据加工入库。如果没有设置，则返回原始数据
-  ts.set_formatdata ( function (data) {
+  ts.set_datafunc ( function (data) {
     // doing reformat data ....
     return data;
   } );
