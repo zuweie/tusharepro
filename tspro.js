@@ -2,106 +2,33 @@
 
 const http = require('http');
 
-function pro_api (api_name, token, params, fields='', formatfunc=reformat_data) {
+/**
+ * @description: TusharePro 类, 传入您在TusharePro申请的Token, 
+ * @params datafunc: 用于处理api返回的数据，置空则不做处理，原始返回。
+ * @return: 
+ */
+function TusharePro(token) {
 
-    return new Promise ( (reslove, reject ) => {
-        
-        
-        const parameters = JSON.stringify({
-            api_name: api_name,
-            token: token,
-            params: params,
-            fields: fields
-        });
-
-        //console.log (parameters);
-
-        const options = {
-            hostname: 'api.tushare.pro',
-            port: 80,
-            path: '/',
-            method: 'POST',
-            headers: {
-                'Content-Type' : 'application/json',
-                'Content-Length' : parameters.length,
-            },
-        };
-        
-        const req = http.request(options, res => {
-
-            if (res.statusCode != 200) {
-                reject ({code:res.statusCode, errmsg:res.statusMessage});
-            }
-            
-            let data = '';
-
-            res.setEncoding('utf8');
-            res.on('data', chunk => {
-                data += chunk;
-            }).on('end', () => {
-                  
-                let stock_data = formatfunc?  formatfunc(data) : JSON.parse(data);
-                if (stock_data.code === 0) {
-                    reslove (stock_data);
-                }else{
-                    reject (stock_data);
-                }
-            });
-            
-
-        } ).on('error', err => {
-            reject ({code:err.code, errmsg:err.message});
-        });
-
-        req.write(parameters);
-        req.end();
-    });
-    
-}
-
- function reformat_data (rawdata) {
-     const raw_data = JSON.parse(rawdata);
-     let stock_data = {
-         code: raw_data.code,
-         errmsg: raw_data.msg ? raw_data.msg : 'ok',
-         data: null,
-         fields: null,
-     };
-     if (raw_data.code == 0) {
-        stock_data.fields = raw_data.data.fields;
-        stock_data.data = [];
-        const fields = stock_data.fields;
-        raw_data.data.items.forEach( item => {
-           let item_data = {};
-           for (let i=0; i<fields.length; ++i) {
-              item_data[fields[i]] = item[i];
-           }
-           stock_data.data.push(item_data);
-        });
-        
-     }
-
-     return stock_data;
- }
+    this.token = token;
+    this.datafunc = null;
+};
 
 /**
- * @description: TusharePro 类, 传入您在TusharePro申请的Token
+ * @description: 设置处理 data 的函数
  * @param {type} 
  * @return: 
  */
-function TusharePro (token) {
-
-    this.token = token;
-
-};
-
+TusharePro.prototype.set_datafunc = function (datafunc) {
+    this.datafunc = datafunc;
+}
 /**
  * @description: tushare pro api
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.pro_api = function (api_name, params, fields=''){
-    return pro_api(api_name, this.token, params, fields);
+TusharePro.prototype.pro_api = function (api_name, params, fields = '') {
+    var pro_api = require('./proapi').pro_api;
+    return pro_api(api_name, this.token, params, fields, this.datafunc);
 };
 
 /**
@@ -109,12 +36,11 @@ TusharePro.prototype.pro_api = function (api_name, params, fields=''){
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.stock_basic = function (is_hs='', list_status='', exchange='', fields='') {
-    return pro_api('stock_basic', 
-        this.token,
+TusharePro.prototype.stock_basic = function (is_hs = '', list_status = '', exchange = '', fields = '') {
+    return this.pro_api('stock_basic',
         {
-            is_hs:is_hs, 
-            list_status:list_status, 
+            is_hs: is_hs,
+            list_status: list_status,
             exchange: exchange
         },
         fields
@@ -126,9 +52,8 @@ TusharePro.prototype.stock_basic = function (is_hs='', list_status='', exchange=
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.trade_cal = function (exchange='', start_date='', end_date='', is_open='', fields='') {
-    return pro_api ('trade_cal', 
-        this.token,
+TusharePro.prototype.trade_cal = function (exchange = '', start_date = '', end_date = '', is_open = '', fields = '') {
+    return this.pro_api('trade_cal',
         {
             exchange: exchange,
             start_date: start_date,
@@ -145,9 +70,8 @@ TusharePro.prototype.trade_cal = function (exchange='', start_date='', end_date=
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.hs_const = function (hs_type, is_new='', fields='') {
-    return pro_api ('hs_const',
-        this.token,
+TusharePro.prototype.hs_const = function (hs_type, is_new = '', fields = '') {
+    return this.pro_api('hs_const',
         {
             hs_type: hs_type,
             is_new: is_new
@@ -161,9 +85,8 @@ TusharePro.prototype.hs_const = function (hs_type, is_new='', fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.name_change = function (ts_code='', start_date='', end_date='', fields='') {
-    return pro_api('namechange',
-        this.token,
+TusharePro.prototype.name_change = function (ts_code = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('namechange',
         {
             ts_code: ts_code,
             start_date: start_date,
@@ -172,47 +95,44 @@ TusharePro.prototype.name_change = function (ts_code='', start_date='', end_date
         fields);
 };
 
- /**
-  * @description: 获取上市公司基础信息/用户需要至少120积分才可以调取，具体请参阅积分获取办法
-  * @param {type} 
-  * @return: 
-  */
-TusharePro.prototype.stock_company = function (exchange='', fields='') {
-    return pro_api('stock_company',
-        this.token,
+/**
+ * @description: 获取上市公司基础信息/用户需要至少120积分才可以调取，具体请参阅积分获取办法
+ * @param {type} 
+ * @return: 
+ */
+TusharePro.prototype.stock_company = function (exchange = '', fields = '') {
+    return this.pro_api('stock_company',
         {
             exchange: exchange,
-        }, 
+        },
         fields
     );
 };
 
- /**
-  * @description: 获取新股上市列表数据/单次最大2000条，总量不限制/用户需要至少120积分才可以调取，具体请参阅积分获取办法
-  * @param {type} 
-  * @return: 
-  */
-TusharePro.prototype.new_share = function (start_date='', end_date='', fields='') {
-    return pro_api('new_share',
-        this.token,
+/**
+ * @description: 获取新股上市列表数据/单次最大2000条，总量不限制/用户需要至少120积分才可以调取，具体请参阅积分获取办法
+ * @param {type} 
+ * @return: 
+ */
+TusharePro.prototype.new_share = function (start_date = '', end_date = '', fields = '') {
+    return this.pro_api('new_share',
         {
             start_date: start_date,
             end_date: end_date,
         },
         fields
-     );
+    );
 };
 
- /**
-  * @description: 交易日每天15点～16点之间/每分钟内最多调取200次，超过5000积分无限制/获取股票行情数据，或通过通用行情接口获取数据，包含了前后复权数据．
-  * @param {type} 
-  * @return: 
-  */
-TusharePro.prototype.daily = function (ts_code='',trade_date='', start_date='', end_date='', symbol='', fields='') {
-    return pro_api('daily',
-        this.token,
+/**
+ * @description: 交易日每天15点～16点之间/每分钟内最多调取200次，超过5000积分无限制/获取股票行情数据，或通过通用行情接口获取数据，包含了前后复权数据．
+ * @param {type} 
+ * @return: 
+ */
+TusharePro.prototype.daily = function (ts_code = '', trade_date = '', start_date = '', end_date = '', symbol = '', fields = '') {
+    return this.pro_api('daily',
         {
-            ts_code:ts_code,
+            ts_code: ts_code,
             trade_date: trade_date,
             start_date: start_date,
             end_date: end_date,
@@ -228,9 +148,8 @@ TusharePro.prototype.daily = function (ts_code='',trade_date='', start_date='', 
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.weekly = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ('weekly',
-        this.token,
+TusharePro.prototype.weekly = function (ts_code = '', trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('weekly',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -246,9 +165,8 @@ TusharePro.prototype.weekly = function (ts_code='', trade_date='', start_date=''
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.monthly = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ('monthly',
-        this.token,
+TusharePro.prototype.monthly = function (ts_code = '', trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('monthly',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -266,18 +184,18 @@ TusharePro.prototype.monthly = function (ts_code='', trade_date='', start_date='
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.pro_bar = function (fields='') {
+TusharePro.prototype.pro_bar = function (fields = '') {
 
-    
-    return new Promise ((reslove, reject) => {
-        
+
+    return new Promise((reslove, reject) => {
+
         reject({
             code: 'NOSUPPORT',
             errmsg: '复权行情通过通用行情接口实现，利用Tushare Pro提供的复权因子进行计算，目前暂时只在SDK中提供支持，http方式无法调取。详情：https://tushare.pro/document/2?doc_id=146'
         });
-        
+
     });
-    
+
 };
 
 /**
@@ -285,9 +203,8 @@ TusharePro.prototype.pro_bar = function (fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.suspend = function (ts_code='', suspend_date='', resume_date='',fields='') {
-    return pro_api ('suspend',
-        this.token,
+TusharePro.prototype.suspend = function (ts_code = '', suspend_date = '', resume_date = '', fields = '') {
+    return this.pro_api('suspend',
         {
             ts_code: ts_code,
             suspend_date: suspend_date,
@@ -302,9 +219,8 @@ TusharePro.prototype.suspend = function (ts_code='', suspend_date='', resume_dat
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.daily_basic = function (ts_code='', trade_date='', start_date='', end_date='', fields=''){
-    return pro_api ('daily_basic',
-        this.token,
+TusharePro.prototype.daily_basic = function (ts_code = '', trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('daily_basic',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -320,9 +236,8 @@ TusharePro.prototype.daily_basic = function (ts_code='', trade_date='', start_da
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.adj_factor = function (ts_code, trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ('adj_factor',
-        this.token,
+TusharePro.prototype.adj_factor = function (ts_code, trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('adj_factor',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -338,9 +253,8 @@ TusharePro.prototype.adj_factor = function (ts_code, trade_date='', start_date='
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.moneyflow = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ('moneyflow',
-        this.token,
+TusharePro.prototype.moneyflow = function (ts_code = '', trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('moneyflow',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -356,9 +270,8 @@ TusharePro.prototype.moneyflow = function (ts_code='', trade_date='', start_date
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.income = function (ts_code, ann_date='', start_date='', end_date='', period='', report_type='', comp_type='', fields=''){
-    return pro_api ('income',
-        this.token,
+TusharePro.prototype.income = function (ts_code, ann_date = '', start_date = '', end_date = '', period = '', report_type = '', comp_type = '', fields = '') {
+    return this.pro_api('income',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -377,9 +290,8 @@ TusharePro.prototype.income = function (ts_code, ann_date='', start_date='', end
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.balancesheet = function (ts_code, ann_date='', start_date='', end_date='', period='', report_type='', comp_type='', fields=''){
-    return pro_api ('balancesheet',
-        this.token,
+TusharePro.prototype.balancesheet = function (ts_code, ann_date = '', start_date = '', end_date = '', period = '', report_type = '', comp_type = '', fields = '') {
+    return this.pro_api('balancesheet',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -390,7 +302,7 @@ TusharePro.prototype.balancesheet = function (ts_code, ann_date='', start_date='
             comp_type: comp_type
         },
         fields
-    );   
+    );
 };
 
 /**
@@ -398,9 +310,8 @@ TusharePro.prototype.balancesheet = function (ts_code, ann_date='', start_date='
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.cashflow = function (ts_code, ann_date='', start_date='', end_date='', period='', report_type='', comp_type='', fields=''){
-    return pro_api ('cashflow',
-        this.token,
+TusharePro.prototype.cashflow = function (ts_code, ann_date = '', start_date = '', end_date = '', period = '', report_type = '', comp_type = '', fields = '') {
+    return this.pro_api('cashflow',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -411,7 +322,7 @@ TusharePro.prototype.cashflow = function (ts_code, ann_date='', start_date='', e
             comp_type: comp_type
         },
         fields
-    );   
+    );
 };
 
 /**
@@ -419,9 +330,8 @@ TusharePro.prototype.cashflow = function (ts_code, ann_date='', start_date='', e
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.forecast = function (ts_code='', ann_date='', start_date='', end_date='', period='', type='', fields=''){
-    return pro_api ('forecast',
-        this.token,
+TusharePro.prototype.forecast = function (ts_code = '', ann_date = '', start_date = '', end_date = '', period = '', type = '', fields = '') {
+    return this.pro_api('forecast',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -431,7 +341,7 @@ TusharePro.prototype.forecast = function (ts_code='', ann_date='', start_date=''
             type: type,
         },
         fields
-    );   
+    );
 };
 
 /**
@@ -439,9 +349,8 @@ TusharePro.prototype.forecast = function (ts_code='', ann_date='', start_date=''
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.express = function (ts_code, ann_date='', start_date='', end_date='', period='', fields='') {
-    return pro_api ('express', 
-        this.token,
+TusharePro.prototype.express = function (ts_code, ann_date = '', start_date = '', end_date = '', period = '', fields = '') {
+    return this.pro_api('express',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -458,9 +367,8 @@ TusharePro.prototype.express = function (ts_code, ann_date='', start_date='', en
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.dividend = function (ts_code='', ann_date='', record_date='', ex_date='', imp_ann_date='',fields='') {
-    return pro_api ( 'dividend',
-        this.token,
+TusharePro.prototype.dividend = function (ts_code = '', ann_date = '', record_date = '', ex_date = '', imp_ann_date = '', fields = '') {
+    return this.pro_api('dividend',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -477,9 +385,8 @@ TusharePro.prototype.dividend = function (ts_code='', ann_date='', record_date='
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.fina_indicator = function (ts_code, ann_date='', start_date='', end_date='', period='', fields=''){
-    return pro_api ( 'fina_indicator',
-        this.token,
+TusharePro.prototype.fina_indicator = function (ts_code, ann_date = '', start_date = '', end_date = '', period = '', fields = '') {
+    return this.pro_api('fina_indicator',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -496,9 +403,8 @@ TusharePro.prototype.fina_indicator = function (ts_code, ann_date='', start_date
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.fina_audit = function (ts_code, ann_date='', start_date='', end_date='', period='', fields='') {
-    return pro_api ( 'final_audit',
-        this.token,
+TusharePro.prototype.fina_audit = function (ts_code, ann_date = '', start_date = '', end_date = '', period = '', fields = '') {
+    return this.pro_api('final_audit',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -515,9 +421,8 @@ TusharePro.prototype.fina_audit = function (ts_code, ann_date='', start_date='',
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.fina_mainbz = function (ts_code, period='', type='', start_date='', end_date='', fields='') {
-    return pro_api ('final_mainbz',
-        this.token,
+TusharePro.prototype.fina_mainbz = function (ts_code, period = '', type = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('final_mainbz',
         {
             ts_code: ts_code,
             period: period,
@@ -534,9 +439,8 @@ TusharePro.prototype.fina_mainbz = function (ts_code, period='', type='', start_
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.disclosure_date = function (ts_code='', end_date='', pre_date='', actual_date='', fields='') {
-    return  pro_api ( 'disclosure_date',
-        this.token,
+TusharePro.prototype.disclosure_date = function (ts_code = '', end_date = '', pre_date = '', actual_date = '', fields = '') {
+    return this.pro_api('disclosure_date',
         {
             ts_code: ts_code,
             end_date: end_date,
@@ -552,9 +456,8 @@ TusharePro.prototype.disclosure_date = function (ts_code='', end_date='', pre_da
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.moneyflow_hsgt = function (trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ( 'moneyflow_hsgt', 
-        this.token,
+TusharePro.prototype.moneyflow_hsgt = function (trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('moneyflow_hsgt',
         {
             trade_date: trade_date,
             start_date: start_date,
@@ -569,9 +472,8 @@ TusharePro.prototype.moneyflow_hsgt = function (trade_date='', start_date='', en
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.hsgt_top10 = function (ts_code='', trade_date='', start_date='', end_date='', market_type='', fields='') {
-    return pro_api ( 'hsgt_top10',
-        this.token,
+TusharePro.prototype.hsgt_top10 = function (ts_code = '', trade_date = '', start_date = '', end_date = '', market_type = '', fields = '') {
+    return this.pro_api('hsgt_top10',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -588,9 +490,8 @@ TusharePro.prototype.hsgt_top10 = function (ts_code='', trade_date='', start_dat
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.ggt_top10 = function (ts_code='', trade_date='', start_date='', end_date='', market_type='', fields='') {
-    return pro_api ( 'ggt_top10',
-        this.token,
+TusharePro.prototype.ggt_top10 = function (ts_code = '', trade_date = '', start_date = '', end_date = '', market_type = '', fields = '') {
+    return this.pro_api('ggt_top10',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -607,9 +508,8 @@ TusharePro.prototype.ggt_top10 = function (ts_code='', trade_date='', start_date
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.margin = function (trade_date, exchange_id='', fields='') {
-    return pro_api ( 'margin',
-        this.token,
+TusharePro.prototype.margin = function (trade_date, exchange_id = '', fields = '') {
+    return this.pro_api('margin',
         {
             trade_date: trade_date,
             exchange_id: exchange_id
@@ -623,14 +523,13 @@ TusharePro.prototype.margin = function (trade_date, exchange_id='', fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.margin_detail = function (trade_date, ts_code='', fields='') {
-    return pro_api ( 'margin_detail',
-        this.token,
+TusharePro.prototype.margin_detail = function (trade_date, ts_code = '', fields = '') {
+    return this.pro_api('margin_detail',
         {
             trade_date: trade_date,
             ts_code: ts_code
         },
-        fields 
+        fields
     );
 };
 
@@ -639,9 +538,8 @@ TusharePro.prototype.margin_detail = function (trade_date, ts_code='', fields=''
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.top10_holders = function (ts_code, period='', ann_date='', start_date='',end_date='', fields='') {
-    return pro_api ( 'top10_holder',
-        this.token,
+TusharePro.prototype.top10_holders = function (ts_code, period = '', ann_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('top10_holder',
         {
             ts_code: ts_code,
             period: period,
@@ -658,10 +556,9 @@ TusharePro.prototype.top10_holders = function (ts_code, period='', ann_date='', 
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.top10_floatholders = function (ts_code, period='', ann_date='', start_date='', end_date='', fields='') {
-    return pro_api ( 'top10_floatholders',
-        this.token,
-        {  
+TusharePro.prototype.top10_floatholders = function (ts_code, period = '', ann_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('top10_floatholders',
+        {
             ts_code: ts_code,
             period: period,
             ann_date: ann_date,
@@ -677,9 +574,8 @@ TusharePro.prototype.top10_floatholders = function (ts_code, period='', ann_date
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.top_list = function (trade_date, ts_code='', fields='') {
-    return pro_api ( 'top_list',
-        this.token,
+TusharePro.prototype.top_list = function (trade_date, ts_code = '', fields = '') {
+    return this.pro_api('top_list',
         {
             trade_date: trade_date,
             ts_code: ts_code
@@ -693,9 +589,8 @@ TusharePro.prototype.top_list = function (trade_date, ts_code='', fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.top_inst = function (trade_date, ts_code='', fields='') {
-    return  pro_api ( 'top_inst', 
-        this.token,
+TusharePro.prototype.top_inst = function (trade_date, ts_code = '', fields = '') {
+    return this.pro_api('top_inst',
         {
             trade_date: trade_date,
             ts_code: ts_code
@@ -709,9 +604,8 @@ TusharePro.prototype.top_inst = function (trade_date, ts_code='', fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.pledge_stat = function (ts_code, fields='') {
-    return pro_api ( 'pledge_stat', 
-        this.token,
+TusharePro.prototype.pledge_stat = function (ts_code, fields = '') {
+    return this.pro_api('pledge_stat',
         {
             ts_code: ts_code
         },
@@ -725,9 +619,8 @@ TusharePro.prototype.pledge_stat = function (ts_code, fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.pledge_detail = function (ts_code, fields='') {
-    return pro_api ( 'pledge_detail',
-        this.token,
+TusharePro.prototype.pledge_detail = function (ts_code, fields = '') {
+    return this.pro_api('pledge_detail',
         {
             ts_code: ts_code
         },
@@ -740,9 +633,8 @@ TusharePro.prototype.pledge_detail = function (ts_code, fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.repurchase = function (ann_date='', start_date='', end_date='', fields='') {
-    return pro_api ('repurchase',
-        this.token,
+TusharePro.prototype.repurchase = function (ann_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('repurchase',
         {
             ann_date: ann_date,
             start_date: start_date,
@@ -757,11 +649,10 @@ TusharePro.prototype.repurchase = function (ann_date='', start_date='', end_date
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.concept = function (src='', fields='') {
-    return pro_ai ('concept',
-        this.token,
+TusharePro.prototype.concept = function (src = '', fields = '') {
+    return pro_api('concept',
         {
-            src:src
+            src: src
         },
         fields
     );
@@ -772,9 +663,8 @@ TusharePro.prototype.concept = function (src='', fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.concept_detail = function (id, fields='') {
-    return pro_api ( 'concept_detail',
-        this.token,
+TusharePro.prototype.concept_detail = function (id, fields = '') {
+    return this.pro_api('concept_detail',
         {
             id: id,
         },
@@ -787,9 +677,8 @@ TusharePro.prototype.concept_detail = function (id, fields='') {
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.share_float = function (ts_code='', ann_date='', float_date='', start_date='', end_date='', fields='') {
-    return pro_api ( 'share_float',
-        this.token,
+TusharePro.prototype.share_float = function (ts_code = '', ann_date = '', float_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('share_float',
         {
             ts_code: ts_code,
             ann_date: ann_date,
@@ -806,15 +695,14 @@ TusharePro.prototype.share_float = function (ts_code='', ann_date='', float_date
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.block_trade = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ( 'block_trade',
-        this.token,
+TusharePro.prototype.block_trade = function (ts_code = '', trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('block_trade',
         {
             ts_code: ts_code,
             trade_date: trade_date,
             start_date: start_date,
             end_date: end_date,
-        }, 
+        },
         fields
     );
 };
@@ -824,9 +712,8 @@ TusharePro.prototype.block_trade = function (ts_code='', trade_date='', start_da
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.stk_account = function (date='', start_date='', end_date='', fields='') {
-    return pro_api ('stk_account',
-        this.token, 
+TusharePro.prototype.stk_account = function (date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('stk_account',
         {
             date: date,
             start_date: start_date,
@@ -841,9 +728,8 @@ TusharePro.prototype.stk_account = function (date='', start_date='', end_date=''
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.stk_holdernumber = function (ts_code='', enddate='', start_date='', end_date='', fields='') {
-    return pro_api ('stk_holdernumber',
-        this.token,
+TusharePro.prototype.stk_holdernumber = function (ts_code = '', enddate = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('stk_holdernumber',
         {
             ts_code: ts_code,
             enddate: enddate,
@@ -859,9 +745,8 @@ TusharePro.prototype.stk_holdernumber = function (ts_code='', enddate='', start_
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.index_basic = function (market, publisher='', category='', fields='') {
-    return pro_api ( 'index_basic', 
-        this.token,
+TusharePro.prototype.index_basic = function (market, publisher = '', category = '', fields = '') {
+    return this.pro_api('index_basic',
         {
             market: market,
             publisher: publisher,
@@ -876,9 +761,8 @@ TusharePro.prototype.index_basic = function (market, publisher='', category='', 
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.index_daily = function (ts_code, trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ('index_daily',
-        this.token,
+TusharePro.prototype.index_daily = function (ts_code, trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('index_daily',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -894,15 +778,14 @@ TusharePro.prototype.index_daily = function (ts_code, trade_date='', start_date=
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.index_weekly = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ( 'index_weekly',
-        this.token,
+TusharePro.prototype.index_weekly = function (ts_code = '', trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('index_weekly',
         {
             ts_code: ts_code,
             trade_date: trade_date,
             start_date: start_date,
             end_date: end_date
-        }, 
+        },
         fields
     );
 };
@@ -912,9 +795,8 @@ TusharePro.prototype.index_weekly = function (ts_code='', trade_date='', start_d
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.index_monthly = function (ts_code='', trade_date='', start_date='', end_date='', fields='') {
-    return pro_api ('index_monthly',
-        this.token,
+TusharePro.prototype.index_monthly = function (ts_code = '', trade_date = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('index_monthly',
         {
             ts_code: ts_code,
             trade_date: trade_date,
@@ -930,9 +812,8 @@ TusharePro.prototype.index_monthly = function (ts_code='', trade_date='', start_
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.index_weight = function (index_code, trade_date, start_date='', end_date='', fields='') {
-    return pro_api ('index_weight',
-        this.token,
+TusharePro.prototype.index_weight = function (index_code, trade_date, start_date = '', end_date = '', fields = '') {
+    return this.pro_api('index_weight',
         {
             index_code: index_code,
             trade_date: trade_date,
@@ -948,15 +829,14 @@ TusharePro.prototype.index_weight = function (index_code, trade_date, start_date
  * @param {type} 
  * @return: 
  */
-TusharePro.prototype.index_dailybasic = function (trade_date='', ts_code='', start_date='', end_date='', fields='') {
-    return pro_api ('index_dailybasic',
-        this.token,
+TusharePro.prototype.index_dailybasic = function (trade_date = '', ts_code = '', start_date = '', end_date = '', fields = '') {
+    return this.pro_api('index_dailybasic',
         {
             trade_date: trade_date,
             ts_code: ts_code,
             start_date: start_date,
             end_date: end_date,
-        }, 
+        },
         fields
     );
 };
