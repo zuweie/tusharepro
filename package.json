@@ -1,6 +1,6 @@
 {
   "name": "tusharepro",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "tushare pro sdk",
   "main": "tspro.js",
   "scripts": {
