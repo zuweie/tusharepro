@@ -20,6 +20,7 @@ function TusharePro(token) {
  */
 TusharePro.prototype.set_datafunc = function (datafunc) {
     this.datafunc = datafunc;
+    return this;
 }
 /**
  * @description: tushare pro api
