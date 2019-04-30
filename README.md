@@ -40,3 +40,4 @@ ts.daily('000001.SZ')
 ### 接口说明
 * [Tushare Pro](https://tushare.pro/document/2)
 * pro_bar 接口不支持 Http，无法封装，[详情](https://tushare.pro/document/2?doc_id=109)
+* 接口只做到指数，那一部分，往后的接口，例如基金将来补上。
