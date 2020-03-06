@@ -15,7 +15,7 @@ exports.pro_api = function (api_name, token, params, fields = '', datafunc) {
         //console.log (parameters);
 
         const options = {
-            hostname: 'api.tushare.pro',
+            hostname: 'api.waditu.com',
             port: 80,
             path: '/',
             method: 'POST',
